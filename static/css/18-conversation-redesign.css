@@ -1,0 +1,249 @@
+/* Odysseus conversation redesign — isolated from other workspace panels.
+ * Loaded after the original stylesheets. Keeps all theme/color tokens,
+ * existing chat controls, streams, keyboard shortcuts and message actions.
+ * Deliberately no DOM changes or new runtime dependencies.
+ */
+
+#chat-container {
+  --conversation-width: 900px;
+  --conversation-edge: color-mix(in srgb, var(--fg) 11%, transparent);
+  --conversation-soft: color-mix(in srgb, var(--fg) 4%, var(--panel));
+}
+
+/* Calm, legible session heading. The existing title, context and menu
+ * retain their click handlers and accessibility names. */
+#chat-container .chat-top-bar {
+  min-height: 48px;
+  flex-shrink: 0;
+  padding-top: 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
+}
+#chat-container .chat-meta-overlay {
+  color: color-mix(in srgb, var(--fg) 86%, transparent);
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  gap: 8px;
+}
+#chat-container .chat-meta-overlay #current-meta {
+  font-weight: 650;
+  line-height: 1.5;
+}
+#chat-container .chat-context-pill {
+  border-radius: 999px;
+}
+#chat-container .export-dl-btn {
+  border-radius: 9px;
+}
+
+/* Single reading column shared by the conversation and composer. Retain
+ * the original scrolling element (crucial for streaming and jump-to-bottom). */
+#chat-container .chat-history {
+  --chat-max: var(--conversation-width);
+  padding-top: 18px;
+  padding-bottom: 24px;
+  padding-left: max(12px, calc((100% - var(--conversation-width)) / 2)) !important;
+  padding-right: max(12px, calc((100% - var(--conversation-width)) / 2)) !important;
+  margin-bottom: 8px;
+  scrollbar-gutter: stable;
+}
+#chat-container .chat-history .msg {
+  box-sizing: border-box;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  line-height: 1.62;
+}
+#chat-container .chat-history .msg-ai {
+  width: 100%;
+  max-width: 100%;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 20px 22px;
+  background: color-mix(in srgb, var(--ai-bubble-bg, var(--panel)) 92%, var(--bg));
+  border: 1px solid var(--conversation-edge);
+  border-radius: 18px;
+  box-shadow: 0 2px 9px color-mix(in srgb, #000 7%, transparent);
+}
+#chat-container .chat-history .msg-user {
+  width: fit-content;
+  max-width: min(82%, 660px);
+  margin-left: auto;
+  margin-right: 0;
+  padding: 14px 18px;
+  background: var(--user-bubble-bg, color-mix(in srgb, var(--fg) 8%, var(--panel)));
+  border: 1px solid var(--conversation-edge);
+  border-radius: 18px 18px 6px 18px;
+}
+#chat-container .chat-history .msg .role {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.015em;
+}
+#chat-container .chat-history .msg .body {
+  font-size: 15px;
+  line-height: 1.68;
+  overflow-wrap: anywhere;
+}
+#chat-container .chat-history .msg .body p {
+  line-height: inherit;
+}
+#chat-container .chat-history .msg .body pre,
+#chat-container .chat-history .msg .body table {
+  max-width: 100%;
+}
+#chat-container .chat-history .msg-footer {
+  margin-top: 12px;
+  gap: 8px;
+  padding-top: 3px;
+}
+#chat-container .chat-history .msg-action-btn,
+#chat-container .chat-history .footer-copy-btn {
+  border-radius: 8px;
+}
+#chat-container .chat-history .msg-user:has(textarea) {
+  width: min(82%, 660px);
+  max-width: 100%;
+}
+
+/* The composer is the single visually prominent control surface.
+ * No absolute repositioning: popovers and pinned tools remain usable. */
+#chat-container .chat-input-bar {
+  max-width: var(--conversation-width);
+  width: 100%;
+  padding: 14px 16px 11px;
+  gap: 10px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--input-border, var(--border)) 88%, var(--fg));
+  background: var(--input-bg, var(--panel));
+  box-shadow: 0 10px 32px color-mix(in srgb, #000 11%, transparent),
+              0 1px 4px color-mix(in srgb, #000 5%, transparent);
+  transition: border-color 170ms ease, box-shadow 170ms ease;
+}
+#chat-container .chat-input-bar:focus-within {
+  border-color: color-mix(in srgb, var(--red) 45%, var(--input-border, var(--border)));
+  box-shadow: 0 10px 34px color-mix(in srgb, #000 12%, transparent),
+              0 0 0 2px color-mix(in srgb, var(--red) 10%, transparent);
+}
+#chat-container .chat-input-bar textarea#message {
+  min-height: 42px;
+  font-size: 15px;
+  line-height: 1.6;
+  padding: 3px 0;
+}
+#chat-container .chat-input-bar textarea#message::placeholder {
+  color: color-mix(in srgb, var(--fg) 56%, transparent);
+}
+#chat-container .chat-input-bar .chat-input-bottom {
+  margin-top: 2px;
+  gap: 10px;
+  min-height: 34px;
+}
+#chat-container .chat-input-bar .chat-input-left {
+  gap: 6px;
+}
+#chat-container .chat-input-bar .input-icon-btn {
+  border-radius: 10px;
+}
+#chat-container .chat-input-bar .model-picker-btn {
+  min-height: 29px;
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--fg) 4%, transparent);
+  color: color-mix(in srgb, var(--fg) 84%, transparent);
+}
+#chat-container .chat-input-bar .model-picker-btn:hover {
+  border-color: color-mix(in srgb, var(--red) 40%, var(--border));
+}
+#chat-container .chat-input-bar .send-btn {
+  min-width: 38px;
+  min-height: 38px;
+  height: 38px !important;
+  border-radius: 11px;
+}
+#chat-container .chat-input-bar .send-btn:not(.newchat-expanded) {
+  width: 38px;
+}
+#chat-container .chat-input-bar .send-btn.newchat-expanded {
+  width: 72px;
+}
+#chat-container .chat-input-bar .mode-toggle {
+  border-radius: 10px;
+}
+#chat-container .chat-input-bar .mode-toggle-btn {
+  border-radius: 9px;
+}
+#chat-container .chat-input-bar button:focus-visible,
+#chat-container .chat-top-bar button:focus-visible,
+#chat-container .chat-history button:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+}
+
+/* Welcome remains centered, with matching composer proportions. */
+#chat-container #welcome-screen .welcome-name {
+  letter-spacing: -0.035em;
+}
+#chat-container #welcome-screen .welcome-sub {
+  color: color-mix(in srgb, var(--fg) 67%, transparent);
+}
+
+@media (max-width: 768px) {
+  #chat-container {
+    --conversation-width: 100%;
+  }
+  #chat-container .chat-top-bar {
+    min-height: 36px;
+    margin-bottom: 4px;
+  }
+  #chat-container .chat-meta-overlay {
+    font-size: 12px;
+    gap: 4px;
+  }
+  #chat-container .chat-history {
+    padding-top: 12px;
+    padding-bottom: 16px;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+    scrollbar-gutter: auto;
+  }
+  #chat-container .chat-history .msg-ai {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 14px 15px;
+    border-radius: 15px;
+  }
+  #chat-container .chat-history .msg-user {
+    max-width: 90% !important;
+    padding: 11px 13px;
+  }
+  #chat-container .chat-history .msg .body {
+    font-size: 14px;
+    line-height: 1.58;
+  }
+  #chat-container .chat-input-bar {
+    padding: 10px 11px calc(10px + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px;
+    box-shadow: 0 4px 16px color-mix(in srgb, #000 10%, transparent);
+  }
+  #chat-container .chat-input-bar textarea#message {
+    min-height: 34px;
+    font-size: 16px; /* avoid iOS focus zoom */
+  }
+  #chat-container .chat-input-bar .send-btn {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    height: 44px !important;
+  }
+  #chat-container .chat-input-bar .send-btn:not(.newchat-expanded) {
+    width: 44px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #chat-container .chat-input-bar {
+    transition: none;
+  }
+}
